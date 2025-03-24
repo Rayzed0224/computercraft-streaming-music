@@ -29,22 +29,11 @@ local needs_next_chunk = 0
 local buffer
 
 local speakers = { peripheral.find("speaker") }
-if #speakers == 0 then
-    error("No speakers attached", 0)
+if #speakers < 2 then
+    error("Two speakers required (left and right)", 0)
 end
-local speaker = speakers[1]
-
--- With this stereo-aware version:
-local leftSpeaker = peripheral.wrap("left") or peripheral.find("speaker")[1]
-local rightSpeaker = peripheral.wrap("right") or leftSpeaker
-local speaker = leftSpeaker -- Maintain compatibility with existing code
-
-local function playStereo(buffer)
-    leftSpeaker.playAudio(buffer)
-    if rightSpeaker ~= leftSpeaker then
-        rightSpeaker.playAudio(buffer)
-    end
-end
+local left_speaker = speakers[1]
+local right_speaker = speakers[2]
 
 os.startTimer(1)
 
@@ -278,7 +267,7 @@ local function mainLoop()
             end
             if playing_status == 1 and needs_next_chunk == 3 then
                 needs_next_chunk = 1
-                while not playStereo(buffer) do
+                while not (left_speaker.playAudio(buffer) and right_speaker.playAudio(buffer)) do
                     needs_next_chunk = 2
                     break
                 end
@@ -314,7 +303,7 @@ local function mainLoop()
                         end
                 
                         buffer = decoder(chunk)
-                        while not playStereo(buffer) do
+                        while not (left_speaker.playAudio(buffer) and right_speaker.playAudio(buffer)) do
                             needs_next_chunk = 2
                             break
                         end
@@ -362,6 +351,8 @@ local function mainLoop()
                     now_playing = search_results[clicked_result]
                     playing = true
                     playing_id = nil
+                    left_speaker.stop()
+                    right_speaker.stop()
                 end
 
                 if y == 8 then
@@ -400,10 +391,7 @@ local function mainLoop()
                             if playing then
                                 playing = false
                                 animate = true
-                                leftSpeaker.stop()
-                                    if rightSpeaker ~= leftSpeaker then
-                                    rightSpeaker.stop()
-                                end
+                                speaker.stop()
                                 playing_id = nil
                             else
                                 if now_playing ~= nil then
@@ -435,10 +423,8 @@ local function mainLoop()
                         if x >= 2 + 8 and x <= 2 + 8 + 6 then
                             local animate = false
                             if playing then
-                                leftSpeaker.stop()
-                                    if rightSpeaker ~= leftSpeaker then
-                                    rightSpeaker.stop()
-                                end
+                                left_speaker.stop()
+                                right_speaker.stop()
                             end
                             if now_playing ~= nil or #queue > 0 then
                                 if #queue > 0 then
