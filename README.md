@@ -1,5 +1,8 @@
 # Streaming music in Minecraft (ComputerCraft CC: Tweaked mod)
 
+#Credits to Terreng
+#Stereo Supported Patch (Left,Right)
+
 **Install:** `pastebin get manTdeiG music`
 
 **Run:** `music`
